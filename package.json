@@ -1,0 +1,36 @@
+{
+  "name": "color-palette",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "site": "webpack-dev-server --hot --inline",
+    "build": "webpack -p"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/goeaway/color-palette.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/goeaway/color-palette/issues"
+  },
+  "homepage": "https://github.com/goeaway/color-palette#readme",
+  "devDependencies": {
+    "@types/react": "^16.9.22",
+    "@types/react-dom": "^16.9.5",
+    "@types/styled-components": "^5.0.0",
+    "react": "^16.12.0",
+    "react-dom": "^16.12.0",
+    "styled-components": "^5.0.1",
+    "ts-loader": "^5.4.5",
+    "typescript": "^3.8.2",
+    "webpack": "^4.41.6",
+    "webpack-cli": "^3.3.11",
+    "webpack-dev-server": "^3.10.3"
+  },
+  "dependencies": {
+    "uuid": "^3.4.0"
+  }
+}
