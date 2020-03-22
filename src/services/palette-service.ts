@@ -3,8 +3,8 @@ import { getRandomColor } from "../utils/get-random-color";
 import { v1 } from "uuid";
 import getRandomPaletteName from "../utils/get-random-palette-name";
 
-export function getPalettesFromStorage() {
-
+export function getPalettesFromStorage() : Array<PaletteDTO> {
+    return [];
 }
 
 export function getRandomPalettes(count: number) : Array<PaletteDTO> {
@@ -15,8 +15,8 @@ export function getRandomPalettes(count: number) : Array<PaletteDTO> {
             name: getRandomPaletteName(), 
             id: v1(),
             normalColor: getRandomColor(),
-            luminenceStep: 30,
-            range: 10,
+            luminenceStep: 4,
+            range: 5,
         })
     }
 

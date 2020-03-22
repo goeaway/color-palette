@@ -3,16 +3,26 @@ import { PaletteDTO, HSL } from "../types";
 import styled from "styled-components";
 import PaletteColor from "./palette-color";
 import { hexToHSL, HSLToHex } from "../utils/color-converter";
+import useClickOutside from "../hooks/use-click-outside";
 
 export interface PaletteProps {
     palette: PaletteDTO;
+    onDelete: (id: number) => void;
 }
 
-const Palette: React.FC<PaletteProps> = ({ palette }) => {
+const Palette: React.FC<PaletteProps> = ({ palette, onDelete }) => {
+    const [baseColor, setBaseColor] = React.useState(palette.normalColor);
     const [colors, setColors] = React.useState<Array<string>>([]);
+    const [focused, setFocused] = React.useState(false);
+    const [editable, setEditable] = React.useState(false);
+    const [showControls, setShowControls] = React.useState(false);
+
+    const outsideClickRef = useClickOutside(() => {
+        setFocused(false);
+    });
 
     React.useEffect(() => {
-        const hsl = hexToHSL(palette.normalColor);
+        const hsl = hexToHSL(baseColor);
 
         const lightHSLs: Array<HSL> = [];
         const darkHSLs: Array<HSL> = [];
@@ -24,20 +34,45 @@ const Palette: React.FC<PaletteProps> = ({ palette }) => {
             const dL = dSource - palette.luminenceStep;
             const lL = lSource + palette.luminenceStep;
 
-            lightHSLs.push({ h: hsl.h, s: hsl.s, l: lL });
-            darkHSLs.push({ h: hsl.h, s: hsl.s, l: dL });
+            lightHSLs.push({ h: hsl.h, s: hsl.s, l: lL > 100 ? 100 : lL });
+            darkHSLs.push({ h: hsl.h, s: hsl.s, l: dL < 0 ? 0 : dL });
         }
 
         const lightHex = lightHSLs.map(hsl => HSLToHex(hsl));
-        const darkHex = darkHSLs.map(hsl => HSLToHex(hsl));
+        const darkHex = darkHSLs.map(hsl => HSLToHex(hsl)).reverse();
 
-        setColors([...lightHex, palette.normalColor, ...darkHex]);
-    }, []);
+        setColors([...darkHex, baseColor, ...lightHex]);
+    }, [baseColor]);
+
+    const containerClickHandler = () => {
+        setFocused(true);
+    }
+
+    const colorChangeSavedHandler = (newColor: string) => {
+        setBaseColor(newColor);
+    }
+
+    const onMouseEnterHandler = () => {
+        setShowControls(true);
+    }
+
+    const onMouseLeaveHandler = () => {
+        setShowControls(false);
+    }
+
+    const deleteButtonClickHandler = () => {
+        onDelete(palette.id);
+    }
 
     return (
-        <Container>
+        <Container onClick={containerClickHandler} ref={outsideClickRef} onMouseOver={onMouseEnterHandler} onMouseEnter={onMouseEnterHandler} onMouseLeave={onMouseLeaveHandler}>
+            {showControls && 
+                <PaletteControls>
+                    <button type="button" onClick={deleteButtonClickHandler}>Delete</button>
+                </PaletteControls>
+            }
             <Title>{palette.name}</Title>
-            {colors.map((c, index) => <PaletteColor key={index} color={c} />)}
+            {colors.map((c, index) => <PaletteColor onChangeSaved={colorChangeSavedHandler} main={c == baseColor} key={index} color={c} />)}
         </Container>
     );
 }
@@ -56,4 +91,9 @@ const Title = styled.span`
     width: 100%;
     display:flex;
     justify-content: center;
+`
+
+const PaletteControls = styled.div`
+    position: absolute;
+    z-index: 1000;
 `
