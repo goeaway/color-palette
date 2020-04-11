@@ -3,7 +3,7 @@ import { PaletteDTO, HSL } from "../types";
 import styled, { css } from "styled-components";
 import PaletteColor from "./palette-color";
 import { hexToHSL, HSLToHex, getContrastYIQ } from "../utils/color-converter";
-import { FaTrash, FaPen, FaSave, FaLock, FaLockOpen, FaFileExport, FaArrowUp, FaArrowDown } from "react-icons/fa";
+import { FaTrash, FaLock, FaLockOpen, FaFileExport, FaArrowUp, FaArrowDown } from "react-icons/fa";
 import CircularIconButton from "./style/buttons";
 import {Draggable} from "react-beautiful-dnd";
 import "../utils/extend-array";
@@ -84,6 +84,10 @@ const Palette: React.FC<PaletteProps> = ({ palette, index, onDelete, onShiftPale
         onLockPalette(index, !palette.locked);
     }
 
+    const paletteNormalColorEditedHandler = (value: string) => {
+        onShiftPalette(index, value);
+    }
+
     return (
         <Draggable draggableId={palette.id + ""} index={index}>
             {(provided, snapshot) => (
@@ -100,7 +104,6 @@ const Palette: React.FC<PaletteProps> = ({ palette, index, onDelete, onShiftPale
                     <PaletteControls showing={showControls && !snapshot.isDragging} color={getContrastYIQ(colors[0])}>
                         <VerticalMenu>
                             <CircularIconButton data-place="right" data-tip={palette.locked ? "Unlock palette" : "Lock palette"} onClick={lockButtonClickHandler}>{palette.locked ? <FaLock /> : <FaLockOpen /> }</CircularIconButton>
-                            <CircularIconButton data-place="right" data-tip="Rename palette"><FaPen /></CircularIconButton>
                             <CircularIconButton data-place="right" data-tip="Delete palette" onClick={deleteButtonClickHandler}><FaTrash /></CircularIconButton>
                             <CircularIconButton data-place="right" data-tip="Export palette"><FaFileExport /></CircularIconButton>
                         </VerticalMenu>
@@ -112,7 +115,7 @@ const Palette: React.FC<PaletteProps> = ({ palette, index, onDelete, onShiftPale
                         <CircularIconButton data-tip="Scroll down for lighter tints" data-place="left" onClick={onScrollDown}><FaArrowDown/></CircularIconButton>
                     </ScrollButton>
                     <LockIndicator showing={palette.locked && !showControls} color={getContrastYIQ(colors[0])}><FaLock /></LockIndicator>
-                    {colors.map((c, index) => <PaletteColor key={index} color={c} />)}
+                    {colors.map((c, index) => <PaletteColor key={index} editable={c === palette.normalColor && showControls && !snapshot.isDragging && !palette.locked} onEdited={paletteNormalColorEditedHandler} color={c} />)}
                 </Container>
             )}
         </Draggable>

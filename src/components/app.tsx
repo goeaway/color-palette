@@ -113,7 +113,7 @@ const App: React.FC = () => {
     return (
         <AppContainer>
             <NavBar>
-                <CircularIconButton data-place="right" data-tip="Randomise all unlocked palettes" lg onClick={randomisePalettesHandler}><FaDiceSix /></CircularIconButton>
+                <CircularIconButton data-place="right" data-tip="Randomise unlocked palettes" lg onClick={randomisePalettesHandler}><FaDiceSix /></CircularIconButton>
             </NavBar>
             <DragDropContext onDragEnd={onDragEndHandler}>
                 <Droppable droppableId="paletteContainer" direction="horizontal">
@@ -146,6 +146,11 @@ const AppContainer = styled.div`
     .tooltip-override {
         padding: .2rem .3rem;
         font-size: 12px;
+        opacity: .85;
+
+        &::after {
+            border-color: transparent !important;
+        }
     }
 `
 

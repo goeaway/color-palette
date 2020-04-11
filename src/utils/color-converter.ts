@@ -135,5 +135,5 @@ export function getContrastYIQ(hex: string){
 
     const {r,g,b} = hexToRGB(hex);
 	const yiq = ((r*299)+(g*587)+(b*114))/1000;
-	return yiq >= 128 ? 'black' : 'white';
+	return yiq >= 128 ? 'rgba(0,0,0,.87)' : '#e0e0e0';
 }
