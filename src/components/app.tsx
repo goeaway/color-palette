@@ -1,7 +1,7 @@
 import * as React from "react";
 import styled from "styled-components";
 import Palette from "./palette";
-import { PaletteDTO } from "../types";
+import { PaletteDTO, TooltipPosition } from "../types";
 import { storePalette, removePaletteFromStorage, getRandomPalette, getPalettes } from "../services/palette-service";
 import "../utils/extend-array";
 import { FaPlus, FaDiceSix } from "react-icons/fa";
@@ -9,7 +9,7 @@ import CircularIconButton from "./style/buttons";
 import {DragDropContext, DropResult, Droppable} from "react-beautiful-dnd";
 import Backdrop from "./style/backdrop";
 import { getRandomColor } from "../utils/get-random-color";
-import ReactTooltip from "react-tooltip";
+import AppTooltip from "./style/tooltip";
 
 const MAX_PALETTES = 10;
 const MIN_PALETTES_START = 5;
@@ -34,19 +34,19 @@ const App: React.FC = () => {
         }
     }, [palettes]);
     
-    const addPaletteHandler = () => {
+    function addPaletteHandler() {
         if(canAdd) {
             setPalettes(p => [...p, getRandomPalette(p.length)]);
         }
     }
 
-    const deletePaletteHandler = (paletteId: number) => {
+    function deletePaletteHandler(paletteId: number) {
         removePaletteFromStorage(paletteId);
 
         setPalettes(ps => ps.filter(p => p.id !== paletteId));
     }
 
-    const updatePalette = (index: number, palette: PaletteDTO) => {
+    function updatePalette(index: number, palette: PaletteDTO) {
         setPalettes(ps => {
             const copy = [...ps];
             copy.splice(index, 1, palette);
@@ -54,7 +54,7 @@ const App: React.FC = () => {
         });
     }
 
-    const lockPaletteHandler = (paletteIndex: number, lock: boolean) => {
+    function lockPaletteHandler(paletteIndex: number, lock: boolean) {
         const palette = palettes[paletteIndex];
         updatePalette(
             paletteIndex, 
@@ -69,7 +69,7 @@ const App: React.FC = () => {
             });
     }
 
-    const shiftPaletteHandler = (paletteIndex: number, newColor: string) => {
+    function shiftPaletteHandler(paletteIndex: number, newColor: string) {
         const palette = palettes[paletteIndex];
         updatePalette(
             paletteIndex, 
@@ -84,16 +84,15 @@ const App: React.FC = () => {
             });
     }
 
-    const randomisePalettesHandler = () => {
+    function randomisePalettesHandler() {
         for(let i = 0; i < palettes.length; i++) {
-            const p = palettes[i];
-            if(!p.locked) {
+            if(!palettes[i].locked) {
                 shiftPaletteHandler(i, getRandomColor());
             }
         }
     }
 
-    const onDragEndHandler = (result: DropResult) => {
+    function onDragEndHandler(result: DropResult) {
         const { destination, source } = result;
 
         if(!destination || (destination.droppableId === source.droppableId && destination.index === source.index)) {
@@ -109,11 +108,13 @@ const App: React.FC = () => {
             return copy;
         });
     }
-
+    
     return (
         <AppContainer>
             <NavBar>
-                <CircularIconButton data-place="right" data-tip="Randomise unlocked palettes" lg onClick={randomisePalettesHandler}><FaDiceSix /></CircularIconButton>
+                <AppTooltip position={TooltipPosition.right} content="Randomise unlocked palettes">
+                    <CircularIconButton lg onClick={randomisePalettesHandler}><FaDiceSix /></CircularIconButton>
+                </AppTooltip>
             </NavBar>
             <DragDropContext onDragEnd={onDragEndHandler}>
                 <Droppable droppableId="paletteContainer" direction="horizontal">
@@ -127,7 +128,6 @@ const App: React.FC = () => {
                 </Droppable>
             </DragDropContext>
             <AddButton data-tip="Add a new palette" data-place="left" onClick={addPaletteHandler} disabled={!canAdd}><FaPlus /></AddButton>
-            <ReactTooltip className="tooltip-override" effect="solid" />
         </AppContainer>
     );
 }
@@ -143,15 +143,7 @@ const AppContainer = styled.div`
     background: #EDF2F7;
     color: rgba(0,0,0,.7);
 
-    .tooltip-override {
-        padding: .2rem .3rem;
-        font-size: 12px;
-        opacity: .85;
-
-        &::after {
-            border-color: transparent !important;
-        }
-    }
+    
 `
 
 const NavBar = styled.div`
@@ -202,3 +194,13 @@ const AddButton = styled.button`
         cursor: default;
     }
 `;
+
+const ModalBackground = styled.div`
+    z-index: 2000;
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: rgba(0,0,0,.2);
+`

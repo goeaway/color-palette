@@ -1,12 +1,14 @@
 import * as React from "react";
-import { PaletteDTO, HSL } from "../types";
+import { PaletteDTO, HSL, TooltipPosition } from "../types";
 import styled, { css } from "styled-components";
 import PaletteColor from "./palette-color";
 import { hexToHSL, HSLToHex, getContrastYIQ } from "../utils/color-converter";
-import { FaTrash, FaLock, FaLockOpen, FaFileExport, FaArrowUp, FaArrowDown } from "react-icons/fa";
+import { FaTrash, FaLock, FaLockOpen, FaCopy, FaArrowUp, FaArrowDown } from "react-icons/fa";
 import CircularIconButton from "./style/buttons";
 import {Draggable} from "react-beautiful-dnd";
+import Tooltip from "react-tooltip-lite";
 import "../utils/extend-array";
+import AppTooltip from "./style/tooltip";
 
 export interface PaletteProps {
     palette: PaletteDTO;
@@ -19,6 +21,8 @@ export interface PaletteProps {
 const Palette: React.FC<PaletteProps> = ({ palette, index, onDelete, onShiftPalette, onLockPalette }) => {
     const [colors, setColors] = React.useState<Array<string>>([]);
     const [showControls, setShowControls] = React.useState(false);
+    const [copiedToClipboard, setCopiedToClipboard] = React.useState(false);
+    const copyButtonRef = React.useRef(null);
 
     React.useEffect(() => {
         const hsl = hexToHSL(palette.normalColor);
@@ -44,35 +48,45 @@ const Palette: React.FC<PaletteProps> = ({ palette, index, onDelete, onShiftPale
         if(!colors.equals(newColors)) {
             setColors(newColors);
         }
-    });
+    }, [palette.normalColor]);
 
-    const onMouseEnterHandler = () => {
+    React.useEffect(() => {
+        if(copiedToClipboard) {
+            const timeout = setTimeout(() => {
+                setCopiedToClipboard(false);
+            }, 1500);
+
+            return () => clearTimeout(timeout);
+        }
+    }, [copiedToClipboard]);
+
+    function onMouseEnterHandler() {
         setShowControls(true);
     }
 
-    const onMouseLeaveHandler = () => {
+    function onMouseLeaveHandler() {
         setShowControls(false);
     }
 
-    const deleteButtonClickHandler = () => {
+    function deleteButtonClickHandler() {
         onDelete(palette.id);
     }
 
-    const onScrollUp = () => {
+    function onScrollUp () {
         if(colors && colors.length && colors[0] !== "#000000" && !palette.locked) {
-            const normalColorIndex = colors.findIndex(c => c === palette.normalColor);
-            onShiftPalette(index, colors[normalColorIndex - 1]);
+            // shift to the middle index - 1
+            onShiftPalette(index, colors[(colors.length / 2 | 0) - 1]);
         }
     }
 
-    const onScrollDown = () => {
+    function onScrollDown () {
         if(colors && colors.length && colors[colors.length -1] !== "#ffffff" && !palette.locked) {
-            const normalColorIndex = colors.findIndex(c => c === palette.normalColor);
-            onShiftPalette(index, colors[normalColorIndex + 1]);
+            // shift to the middle index + 1
+            onShiftPalette(index, colors[(colors.length / 2 | 0) + 1]);
         }
     }
 
-    const onScrollHandler = (e: React.WheelEvent) => {
+    function onScrollHandler (e: React.WheelEvent) {
         if(e.deltaY < 0) {
             onScrollUp();
         } else {
@@ -80,12 +94,25 @@ const Palette: React.FC<PaletteProps> = ({ palette, index, onDelete, onShiftPale
         }
     }
 
-    const lockButtonClickHandler = () => {
+    function lockButtonClickHandler() {
         onLockPalette(index, !palette.locked);
     }
 
-    const paletteNormalColorEditedHandler = (value: string) => {
+    async function copyButtonClickHandler() {
+        await navigator.clipboard.writeText(colors.join("\n"));
+        setCopiedToClipboard(true);
+    }
+
+    function paletteNormalColorEditedHandler(value: string) {
         onShiftPalette(index, value);
+    }
+
+    function getCopyTooltipContent(dataTip: any) {
+        if(!dataTip) {
+            return "";
+        }
+
+        return copiedToClipboard ? "Copied!" : "Copy palette to clipboard";
     }
 
     return (
@@ -103,17 +130,30 @@ const Palette: React.FC<PaletteProps> = ({ palette, index, onDelete, onShiftPale
                 >
                     <PaletteControls showing={showControls && !snapshot.isDragging} color={getContrastYIQ(colors[0])}>
                         <VerticalMenu>
-                            <CircularIconButton data-place="right" data-tip={palette.locked ? "Unlock palette" : "Lock palette"} onClick={lockButtonClickHandler}>{palette.locked ? <FaLock /> : <FaLockOpen /> }</CircularIconButton>
-                            <CircularIconButton data-place="right" data-tip="Delete palette" onClick={deleteButtonClickHandler}><FaTrash /></CircularIconButton>
-                            <CircularIconButton data-place="right" data-tip="Export palette"><FaFileExport /></CircularIconButton>
+                            <AppTooltip position={TooltipPosition.right} content={palette.locked ? "Unlock palette" : "Lock palette"}>
+                                <CircularIconButton onClick={lockButtonClickHandler}>{palette.locked ? <FaLock /> : <FaLockOpen /> }</CircularIconButton>
+                            </AppTooltip>
+                            <AppTooltip position={TooltipPosition.right} content="Remove palette">
+                                <CircularIconButton onClick={deleteButtonClickHandler}><FaTrash /></CircularIconButton>
+                            </AppTooltip>
+                            <AppTooltip position={TooltipPosition.right} content={copiedToClipboard ? "Copied!" : "Copy palette to clipboard"}>
+                                <CircularIconButton onClick={copyButtonClickHandler}><FaCopy /></CircularIconButton>
+                            </AppTooltip>
                         </VerticalMenu>
                     </PaletteControls>
+
                     <ScrollButton showing={showControls && !snapshot.isDragging && colors[0] !== "#000000" && !palette.locked} color={getContrastYIQ(colors[0])}>
-                        <CircularIconButton data-tip="Scroll up for darker tints" data-place="left" onClick={onScrollUp}><FaArrowUp/></CircularIconButton>
+                        <AppTooltip position={TooltipPosition.left} content="Scroll up for darker tints">
+                            <CircularIconButton onClick={onScrollUp}><FaArrowUp/></CircularIconButton>
+                        </AppTooltip>
                     </ScrollButton>
+                    
                     <ScrollButton bottom showing={showControls && !snapshot.isDragging && colors[colors.length -1] !== "#ffffff" && !palette.locked} color={getContrastYIQ(colors[colors.length -1])}>
-                        <CircularIconButton data-tip="Scroll down for lighter tints" data-place="left" onClick={onScrollDown}><FaArrowDown/></CircularIconButton>
+                        <AppTooltip position={TooltipPosition.left} content="Scroll down for lighter tints">
+                            <CircularIconButton onClick={onScrollDown}><FaArrowDown/></CircularIconButton>
+                        </AppTooltip>
                     </ScrollButton>
+                    
                     <LockIndicator showing={palette.locked && !showControls} color={getContrastYIQ(colors[0])}><FaLock /></LockIndicator>
                     {colors.map((c, index) => <PaletteColor key={index} editable={c === palette.normalColor && showControls && !snapshot.isDragging && !palette.locked} onEdited={paletteNormalColorEditedHandler} color={c} />)}
                 </Container>

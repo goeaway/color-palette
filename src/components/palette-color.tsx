@@ -5,7 +5,8 @@ import { FaPen, FaTimes, FaCheck } from "react-icons/fa";
 import CircularIconButton from "./style/buttons";
 import useClickOutside from "../hooks/use-click-outside";
 import useKeyPress from "../hooks/use-key-press";
-import ReactTooltip from "react-tooltip";
+import AppTooltip from "./style/tooltip";
+import { TooltipPosition } from "../types";
 
 export interface PaletteColorProps {
     color: string;
@@ -37,7 +38,10 @@ const PaletteColor: React.FC<PaletteColorProps> = ({ color, editable, onEdited }
 
     React.useEffect(() => {
         if(editing) {
-            inputRef.current.focus();
+            inputRef.current.select();
+            if(inputRef.current.value.length > 1) {
+                inputRef.current.setSelectionRange(1, inputRef.current.value.length);
+            }
         }
     }, [editing]);
 
@@ -71,20 +75,25 @@ const PaletteColor: React.FC<PaletteColorProps> = ({ color, editable, onEdited }
             <ColorInput ref={inputRef} color={contrastColor} type="text" showing={editing} value={newColor} onChange={inputChangeHandler} />
 
             <EditIconContainer showing={editable && !editing} color={contrastColor}>
-                <CircularIconButton data-tip="Edit this palette's source color" onClick={editButtonClickHandler}>
-                    <FaPen />
-                </CircularIconButton>
+                <AppTooltip position={TooltipPosition.top} content="Edit source color">
+                    <CircularIconButton onClick={editButtonClickHandler}>
+                        <FaPen />
+                    </CircularIconButton>
+                </AppTooltip>
             </EditIconContainer>
 
             <EditIconContainer showing={editable && editing} color={contrastColor}>
-                <CircularIconButton data-tip="Save" onClick={saveEditButtonClickHandler}>
-                    <FaCheck />
-                </CircularIconButton>
-                <CircularIconButton data-tip="Cancel" onClick={cancelEditButtonClickHandler}>
-                    <FaTimes />
-                </CircularIconButton>
+                <AppTooltip position={TooltipPosition.top} content="Save">
+                    <CircularIconButton onClick={saveEditButtonClickHandler}>
+                        <FaCheck />
+                    </CircularIconButton>
+                </AppTooltip>
+                <AppTooltip position={TooltipPosition.top} content="Cancel">
+                    <CircularIconButton onClick={cancelEditButtonClickHandler}>
+                        <FaTimes />
+                    </CircularIconButton>
+                </AppTooltip>
             </EditIconContainer>
-            <ReactTooltip className="tooltip-override" effect="solid" place="top" />
         </Container>
     );
 }
@@ -102,7 +111,6 @@ const ColorName = styled.span`
     cursor: ${(p: ColorNameStyleProps) => p.editable && "pointer !important"};
     opacity: 0;
     visibility: hidden;
-    transition: all .3s ease;
 
     ${(p: ColorNameStyleProps) => p.showing && css`
         opacity: 1;
@@ -123,13 +131,10 @@ const ColorInput = styled.input`
     text-align: center;
     opacity: 0;
     visibility: hidden;
-    transition: all .3s ease;
     background: transparent;
-    color: ${(p: ColorInputStyleProps) => p.color};
     outline: none;
     border: none;
-    border-bottom: 1px solid;
-    border-bottom-color: ${(p: ColorInputStyleProps) => p.color};
+    color: ${(p: ColorInputStyleProps) => p.color};
     font-family: 'Roboto';
 
     ${(p: ColorInputStyleProps) => p.showing && css`

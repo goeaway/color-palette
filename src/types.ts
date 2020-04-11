@@ -19,3 +19,10 @@ export interface HSL {
     s: number;
     l: number;
 }
+
+export enum TooltipPosition {
+    left = "left",
+    top = "up",
+    right = "right",
+    bottom = "bottom"
+}
