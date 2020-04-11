@@ -1,52 +1,16 @@
 import * as React from "react";
 import styled from "styled-components";
-import useClickOutside from "../hooks/use-click-outside";
-import useKeyPress from "../hooks/use-key-press";
+import { getContrastYIQ } from "../utils/color-converter";
 
 export interface PaletteColorProps {
     color: string;
-    main: boolean;
-    onChangeSaved: (newColor: string) => void;
 }
 
-const PaletteColor: React.FC<PaletteColorProps> = ({ color, main, onChangeSaved }) => {
-    const [editable, setEditable] = React.useState(false);
-    const [newColor, setNewColor] = React.useState(color);
-    const outsideClickRef = useClickOutside(() => {
-        setEditable(false);
-    });
-
-    const enter = useKeyPress("Enter");
-    const escape = useKeyPress("Escape");
-
-    React.useEffect(() => {
-        if(enter && editable) {      
-            onChangeSaved(newColor);
-            setEditable(false);
-        }
-    }, [enter]);
-
-    React.useEffect(() => {
-        if(escape && editable) {
-            setEditable(false);
-        }
-    })
-
-    const doubleClickHandler = () => {
-        if(main && !editable) {
-            setEditable(true);
-        } 
-    }
-
-    const inputChangeHandler = (ev: React.ChangeEvent<HTMLInputElement>) => {
-        setNewColor(ev.target.value);
-    }
-
+const PaletteColor: React.FC<PaletteColorProps> = ({ color }) => {
     return (
-        <Container background={color} ref={outsideClickRef} onDoubleClick={doubleClickHandler}>
-            {!editable && <ColorName>{newColor}</ColorName>}
-            {editable && <Input type='text' value={newColor} onChange={inputChangeHandler} placeholder="hex code" autoFocus />}
-            <BorderBox bordered={main} />
+        <Container background={color}>
+            <ColorName color={getContrastYIQ(color)}>{color}</ColorName>
+            <BorderBox />
         </Container>
     );
 }
@@ -57,15 +21,14 @@ interface ContainerStyleProps {
     background: string;
 }
 
-const ColorName = styled.span`
-    color: gray;
-`
-interface BorderBoxStyleProps {
-    bordered: boolean;
+interface ColorNameStyleProps {
+    color: string;
 }
 
+const ColorName = styled.span`
+    color: ${(p: ColorNameStyleProps) => p.color};
+`
 const BorderBox = styled.span`
-    border: ${(p: BorderBoxStyleProps) => p.bordered && "2px solid white"};
     border-left: none;
     border-right: none;
     position: absolute;

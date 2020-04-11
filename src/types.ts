@@ -4,6 +4,8 @@ export interface PaletteDTO {
     luminenceStep: number;
     range: number;
     name: string;
+    locked: boolean;
+    index: number;
 }
 
 export interface RGB {

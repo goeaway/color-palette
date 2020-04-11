@@ -127,3 +127,13 @@ export function HSLToRGB(hsl: HSL) : RGB {
     
       return { r, g, b };
 }
+
+export function getContrastYIQ(hex: string){
+    if(!hex) {
+        return "black";
+    }
+
+    const {r,g,b} = hexToRGB(hex);
+	const yiq = ((r*299)+(g*587)+(b*114))/1000;
+	return yiq >= 128 ? 'black' : 'white';
+}
