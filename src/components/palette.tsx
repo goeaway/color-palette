@@ -22,7 +22,6 @@ const Palette: React.FC<PaletteProps> = ({ palette, index, onDelete, onShiftPale
     const [colors, setColors] = React.useState<Array<string>>([]);
     const [showControls, setShowControls] = React.useState(false);
     const [copiedToClipboard, setCopiedToClipboard] = React.useState(false);
-    const copyButtonRef = React.useRef(null);
 
     React.useEffect(() => {
         const hsl = hexToHSL(palette.normalColor);
@@ -44,10 +43,7 @@ const Palette: React.FC<PaletteProps> = ({ palette, index, onDelete, onShiftPale
         const lightHex = lightHSLs.map(hsl => HSLToHex(hsl));
         const darkHex = darkHSLs.map(hsl => HSLToHex(hsl)).reverse();
 
-        const newColors = [...darkHex, palette.normalColor, ...lightHex];
-        if(!colors.equals(newColors)) {
-            setColors(newColors);
-        }
+        setColors([...darkHex, palette.normalColor, ...lightHex]);
     }, [palette.normalColor]);
 
     React.useEffect(() => {
@@ -105,14 +101,6 @@ const Palette: React.FC<PaletteProps> = ({ palette, index, onDelete, onShiftPale
 
     function paletteNormalColorEditedHandler(value: string) {
         onShiftPalette(index, value);
-    }
-
-    function getCopyTooltipContent(dataTip: any) {
-        if(!dataTip) {
-            return "";
-        }
-
-        return copiedToClipboard ? "Copied!" : "Copy palette to clipboard";
     }
 
     return (

@@ -32,6 +32,10 @@ const CircularIconButton = styled.button`
     &:last-child {
         margin-right: 0;
     }
+
+    &:disabled {
+        cursor: default !important;
+    }
 `
 
 export default CircularIconButton;

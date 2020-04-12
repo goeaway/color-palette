@@ -13,10 +13,10 @@ module.exports = {
     ],
     resolve: {
         extensions: [".ts", ".tsx", ".js"],
-        // alias: {
-        //     "react": "preact/compat",
-        //     "react-dom": "preact/compat"
-        // }
+        alias: {
+            "react": "preact/compat",
+            "react-dom": "preact/compat"
+        }
     },
     module: {
         rules: [

@@ -4,7 +4,7 @@ import Palette from "./palette";
 import { PaletteDTO, TooltipPosition } from "../types";
 import { storePalette, removePaletteFromStorage, getRandomPalette, getPalettes } from "../services/palette-service";
 import "../utils/extend-array";
-import { FaPlus, FaDiceSix } from "react-icons/fa";
+import { FaPlus, FaDiceSix, FaInfoCircle } from "react-icons/fa";
 import CircularIconButton from "./style/buttons";
 import {DragDropContext, DropResult, Droppable} from "react-beautiful-dnd";
 import Backdrop from "./style/backdrop";
@@ -112,9 +112,17 @@ const App: React.FC = () => {
     return (
         <AppContainer>
             <NavBar>
-                <AppTooltip position={TooltipPosition.right} content="Randomise unlocked palettes">
-                    <CircularIconButton lg onClick={randomisePalettesHandler}><FaDiceSix /></CircularIconButton>
-                </AppTooltip>
+                <NavBarInner>
+                    <TagLine>Create a brand new color scheme for your next project. Mix and match colors you like with this drag and drop palette creator.</TagLine>
+                </NavBarInner>
+                <NavBarInner>
+                    <AppTooltip position={TooltipPosition.left} content="Randomise unlocked palettes">
+                        <CircularIconButton lg onClick={randomisePalettesHandler}><FaDiceSix /></CircularIconButton>
+                    </AppTooltip>
+                    <AppTooltip position={TooltipPosition.left} content={canAdd ? "Add a new palette" : "10/10 palettes"}>
+                        <CircularIconButton lg onClick={addPaletteHandler} disabled={!canAdd}><FaPlus /></CircularIconButton>
+                    </AppTooltip>
+                </NavBarInner>
             </NavBar>
             <DragDropContext onDragEnd={onDragEndHandler}>
                 <Droppable droppableId="paletteContainer" direction="horizontal">
@@ -127,7 +135,6 @@ const App: React.FC = () => {
                     )}
                 </Droppable>
             </DragDropContext>
-            <AddButton data-tip="Add a new palette" data-place="left" onClick={addPaletteHandler} disabled={!canAdd}><FaPlus /></AddButton>
         </AppContainer>
     );
 }
@@ -138,18 +145,36 @@ const AppContainer = styled.div`
     width: 100vw;
     height: 100vh;
     display:grid;
-    grid-template-rows: [header] 50px [main] auto;
-    grid-template-columns: [main] auto [controls] 90px;
+    grid-template-rows: [header] 60px [main] auto;
     background: #EDF2F7;
     color: rgba(0,0,0,.7);
+`;
 
-    
+const TagLine = styled.span`
+    font-size: 14px;
+    font-weight: 500;
+`
+
+const NavBarInner = styled.div`
+    display:flex;
+    align-items: center;
+    justify-content: space-between;
+
+    * {
+        padding: 0 .35rem;
+    }
+
+    *:first-child {
+        padding-left: 0;
+    }
+
+    *:last-child {
+        padding-right: 0;
+    }
 `
 
 const NavBar = styled.div`
     grid-row-start: header;
-    grid-column-start: main;
-    grid-column-end: controls;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -160,47 +185,12 @@ const PaletteContainer = styled.div`
     overflow: hidden;
     display:flex;
     position: relative;
-    grid-row-start: main;
-    grid-column-start: main;
     border-radius: 3px;
-    margin: 0 0 1rem 1rem;
+    margin: 0 1rem 1rem 1rem;
     box-shadow:
         0 0px 4.8px rgba(0, 0, 0, 0.052),
         0 0px 13.4px rgba(0, 0, 0, 0.069),
         0 0px 32.3px rgba(0, 0, 0, 0.088),
         0 0px 107px rgba(0, 0, 0, 0.16)
     ;
-`
-
-const AddButton = styled.button`
-    grid-row-start: main;
-    grid-column-start: controls;
-    border-radius: 3px;
-    margin: 0 1rem 1rem 1rem;
-    transition: all .1s ease;
-    cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-    border: 1px solid #ddd;
-    background: #e0e0e0;
-    color: inherit;
-    outline: none;
-
-    &:hover {
-        filter: brightness(90%);
-    }
-
-    &:disabled {
-        filter: brightness(100%);
-        cursor: default;
-    }
-`;
-
-const ModalBackground = styled.div`
-    z-index: 2000;
-    width: 100vw;
-    height: 100vh;
-    position: fixed;
-    top: 0;
-    left: 0;
-    background-color: rgba(0,0,0,.2);
 `
