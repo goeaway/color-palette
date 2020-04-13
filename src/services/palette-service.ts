@@ -1,7 +1,6 @@
 import { PaletteDTO } from "../types";
 import { getRandomColor } from "../utils/get-random-color";
 import { v1 } from "uuid";
-import getRandomPaletteName from "../utils/get-random-palette-name";
 import { getMatchingKey, set, remove } from "./storage-service";
 
 const PALETTE_KEY_BASE = "palette_";
@@ -18,19 +17,18 @@ export function getPalettesFromStorage() : Array<PaletteDTO> {
     return getMatchingKey<PaletteDTO>(PALETTE_KEY_BASE + "*");
 }
 
-export function getRandomPalette(index: number) : PaletteDTO {
+export function getRandomPalette(index: number, luminenceStep: number, range: number) : PaletteDTO {
     return {
-        name: getRandomPaletteName(), 
         id: v1(),
         normalColor: getRandomColor(),
-        luminenceStep: 4,
-        range: 5,
+        luminenceStep,
+        range,
         locked: false,
         index: index
     }
 }
 
-export function getPalettes (min: number) : Array<PaletteDTO> {
+export function getPalettes (min: number, luminenceStep: number, range: number) : Array<PaletteDTO> {
     const fromStorage = getPalettesFromStorage();
     if(fromStorage.length >= min) {
         return fromStorage.sort((a, b) => a.index - b.index);
@@ -40,12 +38,12 @@ export function getPalettes (min: number) : Array<PaletteDTO> {
 
     if(existingIndexes.indexOf(0) < 0) {
         existingIndexes.push(0);
-        fromStorage.push(getRandomPalette(0));
+        fromStorage.push(getRandomPalette(0, luminenceStep, range));
     }
 
     if(existingIndexes.indexOf(min - 1) < 0) {
         existingIndexes.push(min - 1);
-        fromStorage.push(getRandomPalette(min - 1));
+        fromStorage.push(getRandomPalette(min - 1, luminenceStep, range));
     }
 
     const sortedIndexes = existingIndexes.sort();
@@ -55,7 +53,7 @@ export function getPalettes (min: number) : Array<PaletteDTO> {
         const difference = sortedIndexes[i] - sortedIndexes[i - 1];
         if(difference != 1) {
             for(let j = 1; j < difference; j++) {
-                fromStorage.push(getRandomPalette(sortedIndexes[i - 1] + j));
+                fromStorage.push(getRandomPalette(sortedIndexes[i - 1] + j, luminenceStep, range));
             }
         }
     }

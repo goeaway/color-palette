@@ -10,14 +10,24 @@ import {DragDropContext, DropResult, Droppable} from "react-beautiful-dnd";
 import { getRandomColor } from "../utils/get-random-color";
 import Backdrop from "./style/backdrop";
 import InfoPopover from "./style/info-popover";
+import { useSelector, useDispatch } from "react-redux";
+import { SettingsState } from "../state/types";
+import { setRange, setMinPalette } from "../state/actions/settings-actions";
 
 const MAX_PALETTES = 10;
-const MIN_PALETTES_START = 5;
 
 const App: React.FC = () => {
-    const [palettes, setPalettes] = useState<Array<PaletteDTO>>(getPalettes(MIN_PALETTES_START));
+    const settings = useSelector((settingsState: SettingsState) => settingsState);
+    const dispatch = useDispatch();
+    const [palettes, setPalettes] = useState<Array<PaletteDTO>>([]);
     const [canAdd, setCanAdd] = useState(true);
     const [settingsPopoverOpen, setSettingsPopoverOpen] = useState(false);
+
+    useEffect(() => {
+        if(settings) {
+            setPalettes(getPalettes(settings.minPalette, settings.luminenceStep, settings.range));
+        }
+    }, [settings]);
 
     useEffect(() => {
         setCanAdd(palettes.length <= MAX_PALETTES);
@@ -37,7 +47,7 @@ const App: React.FC = () => {
     
     function addPaletteHandler() {
         if(canAdd) {
-            setPalettes(p => [...p, getRandomPalette(p.length)]);
+            setPalettes(p => [...p, getRandomPalette(p.length, settings.luminenceStep, settings.range)]);
         }
     }
 
@@ -61,7 +71,6 @@ const App: React.FC = () => {
             paletteIndex, 
             { 
                 id: palette.id, 
-                name: palette.name,
                 locked: lock, 
                 normalColor: palette.normalColor, 
                 luminenceStep: palette.luminenceStep, 
@@ -76,7 +85,6 @@ const App: React.FC = () => {
             paletteIndex, 
             { 
                 id: palette.id, 
-                name: palette.name,
                 locked: palette.locked, 
                 normalColor: newColor, 
                 luminenceStep: palette.luminenceStep, 
@@ -126,7 +134,7 @@ const App: React.FC = () => {
                 </NavBarInner>
                 <NavBarInner>
                     <InfoPopover onClose={settingsPopoverClosedHandler} show={settingsPopoverOpen} content={(
-                        <div>Heello</div>
+                        <button onClick={() => dispatch(setMinPalette(settings.minPalette + 1))}>Min {settings.minPalette}</button>
                     )}>
                         <CircularIconButton 
                             lg 

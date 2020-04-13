@@ -25,7 +25,12 @@ export const get = <T>(key: string) : T => {
     }
 
     const localStorageStr = window.localStorage.getItem(key);
-    return localStorageStr && JSON.parse(decode(localStorageStr)) as T;
+
+    if(localStorageStr === null) {
+        return undefined;
+    }
+
+    return JSON.parse(decode(localStorageStr)) as T;
 }
 
 export const set = <T>(key: string, value: T) => {
