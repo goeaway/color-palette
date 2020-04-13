@@ -16,6 +16,9 @@ export interface PaletteProps {
     onLockPalette: (index: number, lock: boolean) => void;
 }
 
+const LOWEST_LUM = 1;
+const HIGHEST_LUM = 99;
+
 const Palette: React.FC<PaletteProps> = ({ palette, settings, index, onDelete, onShiftPalette, onLockPalette }) => {
     const [colors, setColors] = useState<Array<HSL>>([]);
     const [showControls, setShowControls] = useState(false);
@@ -43,8 +46,8 @@ const Palette: React.FC<PaletteProps> = ({ palette, settings, index, onDelete, o
             const dL = dSource - settings.luminenceStep;
             const lL = lSource + settings.luminenceStep;
             
-            lightHSLs.push({ h: hsl.h, s: hsl.s, l: lL > 100 ? 100 : lL });
-            darkHSLs.push({ h: hsl.h, s: hsl.s, l: dL < 0 ? 0 : dL });
+            lightHSLs.push({ h: hsl.h, s: hsl.s, l: lL > HIGHEST_LUM ? HIGHEST_LUM : lL });
+            darkHSLs.push({ h: hsl.h, s: hsl.s, l: dL < LOWEST_LUM ? LOWEST_LUM : dL });
         }
         
         setColors([...darkHSLs.reverse(), palette.normalColor, ...lightHSLs]);
@@ -74,14 +77,14 @@ const Palette: React.FC<PaletteProps> = ({ palette, settings, index, onDelete, o
     }
 
     function onScrollUp () {
-        if(colors && colors.length && colors[0].l !== 0 && !palette.locked) {
+        if(colors && colors.length && colors[0].l !== LOWEST_LUM && !palette.locked) {
             // shift to the middle index - 1
             onShiftPalette(index, colors[(colors.length / 2 | 0) - 1]);
         }
     }
 
     function onScrollDown () {
-        if(colors && colors.length && colors[colors.length -1].l !== 100 && !palette.locked) {
+        if(colors && colors.length && colors[colors.length -1].l !== HIGHEST_LUM && !palette.locked) {
             // shift to the middle index + 1
             onShiftPalette(index, colors[(colors.length / 2 | 0) + 1]);
         }
@@ -130,11 +133,11 @@ const Palette: React.FC<PaletteProps> = ({ palette, settings, index, onDelete, o
                         </VerticalMenu>
                     </PaletteControls>
 
-                    <ScrollButton showing={showControls && !snapshot.isDragging && colors[0].l !== 0 && !palette.locked} color={getContrastYIQ(colors[0])}>
+                    <ScrollButton showing={showControls && !snapshot.isDragging && colors[0].l !== LOWEST_LUM && !palette.locked} color={getContrastYIQ(colors[0])}>
                         <CircularIconButton titleDisplayDirection="left" title="Scroll up for darker tints" onClick={onScrollUp}><FaArrowUp/></CircularIconButton>
                     </ScrollButton>
                     
-                    <ScrollButton bottom showing={showControls && !snapshot.isDragging && colors[colors.length -1].l !== 100 && !palette.locked} color={getContrastYIQ(colors[colors.length -1])}>
+                    <ScrollButton bottom showing={showControls && !snapshot.isDragging && colors[colors.length -1].l !== HIGHEST_LUM && !palette.locked} color={getContrastYIQ(colors[colors.length -1])}>
                         <CircularIconButton titleDisplayDirection="left" title="Scroll down for lighter tints" onClick={onScrollDown}><FaArrowDown/></CircularIconButton>
                     </ScrollButton>
                     
