@@ -1,24 +1,25 @@
-import * as React from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import Palette from "./palette";
-import { PaletteDTO, TooltipPosition } from "../types";
+import { PaletteDTO } from "../types";
 import { storePalette, removePaletteFromStorage, getRandomPalette, getPalettes } from "../services/palette-service";
 import "../utils/extend-array";
-import { FaPlus, FaDiceSix, FaInfoCircle } from "react-icons/fa";
-import CircularIconButton from "./style/buttons";
+import { FaPlus, FaDiceSix, FaCog } from "react-icons/fa";
+import CircularIconButton from "./style/circular-icon-button";
 import {DragDropContext, DropResult, Droppable} from "react-beautiful-dnd";
-import Backdrop from "./style/backdrop";
 import { getRandomColor } from "../utils/get-random-color";
-import AppTooltip from "./style/tooltip";
+import Backdrop from "./style/backdrop";
+import InfoPopover from "./style/info-popover";
 
 const MAX_PALETTES = 10;
 const MIN_PALETTES_START = 5;
 
 const App: React.FC = () => {
-    const [palettes, setPalettes] = React.useState<Array<PaletteDTO>>(getPalettes(MIN_PALETTES_START));
-    const [canAdd, setCanAdd] = React.useState(true);
+    const [palettes, setPalettes] = useState<Array<PaletteDTO>>(getPalettes(MIN_PALETTES_START));
+    const [canAdd, setCanAdd] = useState(true);
+    const [settingsPopoverOpen, setSettingsPopoverOpen] = useState(false);
 
-    React.useEffect(() => {
+    useEffect(() => {
         setCanAdd(palettes.length <= MAX_PALETTES);
 
         // make sure all that are locked are saved and are saved with the correct index
@@ -92,6 +93,14 @@ const App: React.FC = () => {
         }
     }
 
+    function settingsButtonClickHandler() {
+        setSettingsPopoverOpen(!settingsPopoverOpen);
+    }
+
+    function settingsPopoverClosedHandler() {
+        setSettingsPopoverOpen(false);
+    }
+
     function onDragEndHandler(result: DropResult) {
         const { destination, source } = result;
 
@@ -116,12 +125,35 @@ const App: React.FC = () => {
                     <TagLine>Create a brand new color scheme for your next project. Mix and match colors you like with this drag and drop palette creator.</TagLine>
                 </NavBarInner>
                 <NavBarInner>
-                    <AppTooltip position={TooltipPosition.left} content="Randomise unlocked palettes">
-                        <CircularIconButton lg onClick={randomisePalettesHandler}><FaDiceSix /></CircularIconButton>
-                    </AppTooltip>
-                    <AppTooltip position={TooltipPosition.left} content={canAdd ? "Add a new palette" : "10/10 palettes"}>
-                        <CircularIconButton lg onClick={addPaletteHandler} disabled={!canAdd}><FaPlus /></CircularIconButton>
-                    </AppTooltip>
+                    <InfoPopover onClose={settingsPopoverClosedHandler} show={settingsPopoverOpen} content={(
+                        <div>Heello</div>
+                    )}>
+                        <CircularIconButton 
+                            lg 
+                            onClick={settingsButtonClickHandler}
+                            title="Settings"
+                            titleDisplayDirection="left"
+                            disableTitle={settingsPopoverOpen}
+                            >
+                            <FaCog />
+                        </CircularIconButton>
+                    </InfoPopover>
+                    <CircularIconButton 
+                        lg 
+                        onClick={randomisePalettesHandler}
+                        titleDisplayDirection="left"
+                        title="Randomise unlocked palettes"
+                    >
+                        <FaDiceSix />
+                    </CircularIconButton>
+                    <CircularIconButton 
+                        lg 
+                        onClick={addPaletteHandler} 
+                        titleDisplayDirection="left"
+                        title={canAdd ? "Add a new palette" : "10/10 palettes"}
+                    >
+                        <FaPlus />
+                    </CircularIconButton>
                 </NavBarInner>
             </NavBar>
             <DragDropContext onDragEnd={onDragEndHandler}>
@@ -160,15 +192,15 @@ const NavBarInner = styled.div`
     align-items: center;
     justify-content: space-between;
 
-    * {
+    > * {
         padding: 0 .35rem;
     }
 
-    *:first-child {
+    > *:first-child {
         padding-left: 0;
     }
 
-    *:last-child {
+    > *:last-child {
         padding-right: 0;
     }
 `

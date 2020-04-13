@@ -1,14 +1,12 @@
-import * as React from "react";
-import { PaletteDTO, HSL, TooltipPosition } from "../types";
+import React, { useState, useEffect} from "react";
+import { PaletteDTO, HSL } from "../types";
 import styled, { css } from "styled-components";
 import PaletteColor from "./palette-color";
 import { hexToHSL, HSLToHex, getContrastYIQ } from "../utils/color-converter";
 import { FaTrash, FaLock, FaLockOpen, FaCopy, FaArrowUp, FaArrowDown } from "react-icons/fa";
-import CircularIconButton from "./style/buttons";
-import {Draggable} from "react-beautiful-dnd";
-import Tooltip from "react-tooltip-lite";
+import CircularIconButton from "./style/circular-icon-button";
+import { Draggable } from "react-beautiful-dnd";
 import "../utils/extend-array";
-import AppTooltip from "./style/tooltip";
 
 export interface PaletteProps {
     palette: PaletteDTO;
@@ -19,34 +17,43 @@ export interface PaletteProps {
 }
 
 const Palette: React.FC<PaletteProps> = ({ palette, index, onDelete, onShiftPalette, onLockPalette }) => {
-    const [colors, setColors] = React.useState<Array<string>>([]);
-    const [showControls, setShowControls] = React.useState(false);
-    const [copiedToClipboard, setCopiedToClipboard] = React.useState(false);
+    const [colors, setColors] = useState<Array<string>>([]);
+    const [showControls, setShowControls] = useState(false);
+    const [copiedToClipboard, setCopiedToClipboard] = useState(false);
+    const [isIn, setIsIn] = useState(false);
 
-    React.useEffect(() => {
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            setIsIn(true);
+        }, 50);
+
+        return () => clearTimeout(timeout);
+    }, []);
+
+    useEffect(() => {
         const hsl = hexToHSL(palette.normalColor);
-
+        
         const lightHSLs: Array<HSL> = [];
         const darkHSLs: Array<HSL> = [];
-
+        
         for(let i = 0; i < palette.range; i++) {
             const dSource = i === 0 ? hsl.l : darkHSLs[i-1].l;
             const lSource = i === 0 ? hsl.l : lightHSLs[i-1].l;
-
+            
             const dL = dSource - palette.luminenceStep;
             const lL = lSource + palette.luminenceStep;
-
+            
             lightHSLs.push({ h: hsl.h, s: hsl.s, l: lL > 100 ? 100 : lL });
             darkHSLs.push({ h: hsl.h, s: hsl.s, l: dL < 0 ? 0 : dL });
         }
-
+        
         const lightHex = lightHSLs.map(hsl => HSLToHex(hsl));
         const darkHex = darkHSLs.map(hsl => HSLToHex(hsl)).reverse();
-
+        
         setColors([...darkHex, palette.normalColor, ...lightHex]);
     }, [palette.normalColor]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if(copiedToClipboard) {
             const timeout = setTimeout(() => {
                 setCopiedToClipboard(false);
@@ -65,7 +72,8 @@ const Palette: React.FC<PaletteProps> = ({ palette, index, onDelete, onShiftPale
     }
 
     function deleteButtonClickHandler() {
-        onDelete(palette.id);
+        setIsIn(false);
+        setTimeout(() => onDelete(palette.id), 300);
     }
 
     function onScrollUp () {
@@ -113,33 +121,24 @@ const Palette: React.FC<PaletteProps> = ({ palette, index, onDelete, onShiftPale
                     onMouseEnter={onMouseEnterHandler} 
                     onMouseLeave={onMouseLeaveHandler}
                     ref={provided.innerRef}
+                    isIn={isIn}
                     isDragging={snapshot.isDragging}
                     onWheel={onScrollHandler}
                 >
                     <PaletteControls showing={showControls && !snapshot.isDragging} color={getContrastYIQ(colors[0])}>
                         <VerticalMenu>
-                            <AppTooltip position={TooltipPosition.right} content={palette.locked ? "Unlock palette" : "Lock palette"}>
-                                <CircularIconButton onClick={lockButtonClickHandler}>{palette.locked ? <FaLock /> : <FaLockOpen /> }</CircularIconButton>
-                            </AppTooltip>
-                            <AppTooltip position={TooltipPosition.right} content="Remove palette">
-                                <CircularIconButton onClick={deleteButtonClickHandler}><FaTrash /></CircularIconButton>
-                            </AppTooltip>
-                            <AppTooltip position={TooltipPosition.right} content={copiedToClipboard ? "Copied!" : "Copy palette to clipboard"}>
-                                <CircularIconButton onClick={copyButtonClickHandler}><FaCopy /></CircularIconButton>
-                            </AppTooltip>
+                            <CircularIconButton titleDisplayDirection="right" title={palette.locked ? "Unlock palette" : "Lock palette"} onClick={lockButtonClickHandler}>{palette.locked ? <FaLock /> : <FaLockOpen /> }</CircularIconButton>
+                            <CircularIconButton titleDisplayDirection="right" title="Remove palette" onClick={deleteButtonClickHandler}><FaTrash /></CircularIconButton>
+                            <CircularIconButton titleDisplayDirection="right" title={copiedToClipboard ? "Copied!" : "Copy palette to clipboard"} onClick={copyButtonClickHandler}><FaCopy /></CircularIconButton>
                         </VerticalMenu>
                     </PaletteControls>
 
                     <ScrollButton showing={showControls && !snapshot.isDragging && colors[0] !== "#000000" && !palette.locked} color={getContrastYIQ(colors[0])}>
-                        <AppTooltip position={TooltipPosition.left} content="Scroll up for darker tints">
-                            <CircularIconButton onClick={onScrollUp}><FaArrowUp/></CircularIconButton>
-                        </AppTooltip>
+                        <CircularIconButton titleDisplayDirection="left" title="Scroll up for darker tints" onClick={onScrollUp}><FaArrowUp/></CircularIconButton>
                     </ScrollButton>
                     
                     <ScrollButton bottom showing={showControls && !snapshot.isDragging && colors[colors.length -1] !== "#ffffff" && !palette.locked} color={getContrastYIQ(colors[colors.length -1])}>
-                        <AppTooltip position={TooltipPosition.left} content="Scroll down for lighter tints">
-                            <CircularIconButton onClick={onScrollDown}><FaArrowDown/></CircularIconButton>
-                        </AppTooltip>
+                        <CircularIconButton titleDisplayDirection="left" title="Scroll down for lighter tints" onClick={onScrollDown}><FaArrowDown/></CircularIconButton>
                     </ScrollButton>
                     
                     <LockIndicator showing={palette.locked && !showControls} color={getContrastYIQ(colors[0])}><FaLock /></LockIndicator>
@@ -154,6 +153,7 @@ export default Palette;
 
 interface ContainerStyleProps {
     isDragging: boolean;
+    isIn: boolean;
 }
 
 const Container = styled.div`
@@ -164,7 +164,14 @@ const Container = styled.div`
     flex-direction: column;
     position: relative;
     overflow:hidden;
-    transition: font-size .3s ease;
+    opacity: 0;
+    visibility: hidden;
+    transition: visibility .3s ease, opacity .3s ease;
+    
+    ${(p: ContainerStyleProps) => p.isIn && css`
+        opacity: 1;
+        visibility: visible;
+    `}
 
     ${(p: ContainerStyleProps) => p.isDragging && css`
         border-radius: 3px;

@@ -3,7 +3,6 @@ export interface PaletteDTO {
     normalColor: string;
     luminenceStep: number;
     range: number;
-    name: string;
     locked: boolean;
     index: number;
 }
@@ -20,9 +19,7 @@ export interface HSL {
     l: number;
 }
 
-export enum TooltipPosition {
-    left = "left",
-    top = "up",
-    right = "right",
-    bottom = "bottom"
+export interface Setting {
+    type: string;
+    value: string;
 }

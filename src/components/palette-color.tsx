@@ -2,11 +2,9 @@ import * as React from "react";
 import styled, { css } from "styled-components";
 import { getContrastYIQ } from "../utils/color-converter";
 import { FaPen, FaTimes, FaCheck } from "react-icons/fa";
-import CircularIconButton from "./style/buttons";
+import CircularIconButton from "./style/circular-icon-button";
 import useClickOutside from "../hooks/use-click-outside";
 import useKeyPress from "../hooks/use-key-press";
-import AppTooltip from "./style/tooltip";
-import { TooltipPosition } from "../types";
 
 export interface PaletteColorProps {
     color: string;
@@ -75,24 +73,18 @@ const PaletteColor: React.FC<PaletteColorProps> = ({ color, editable, onEdited }
             <ColorInput ref={inputRef} color={contrastColor} type="text" showing={editing} value={newColor} onChange={inputChangeHandler} />
 
             <EditIconContainer showing={editable && !editing} color={contrastColor}>
-                <AppTooltip position={TooltipPosition.top} content="Edit source color">
-                    <CircularIconButton onClick={editButtonClickHandler}>
-                        <FaPen />
-                    </CircularIconButton>
-                </AppTooltip>
+                <CircularIconButton titleDisplayDirection="left" title="Edit source color" onClick={editButtonClickHandler}>
+                    <FaPen />
+                </CircularIconButton>
             </EditIconContainer>
 
             <EditIconContainer showing={editable && editing} color={contrastColor}>
-                <AppTooltip position={TooltipPosition.top} content="Save">
-                    <CircularIconButton onClick={saveEditButtonClickHandler}>
-                        <FaCheck />
-                    </CircularIconButton>
-                </AppTooltip>
-                <AppTooltip position={TooltipPosition.top} content="Cancel">
-                    <CircularIconButton onClick={cancelEditButtonClickHandler}>
-                        <FaTimes />
-                    </CircularIconButton>
-                </AppTooltip>
+                <CircularIconButton titleDisplayDirection="left" title="Confirm" onClick={saveEditButtonClickHandler}>
+                    <FaCheck />
+                </CircularIconButton>
+                <CircularIconButton titleDisplayDirection="left" title="Cancel" onClick={cancelEditButtonClickHandler}>
+                    <FaTimes />
+                </CircularIconButton>
             </EditIconContainer>
         </Container>
     );
@@ -111,6 +103,7 @@ const ColorName = styled.span`
     cursor: ${(p: ColorNameStyleProps) => p.editable && "pointer !important"};
     opacity: 0;
     visibility: hidden;
+    font-weight: 500;
 
     ${(p: ColorNameStyleProps) => p.showing && css`
         opacity: 1;
