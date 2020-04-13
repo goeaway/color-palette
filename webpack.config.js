@@ -8,9 +8,9 @@ module.exports = {
         filename: "bundle.js",
         publicPath: "/output"
     },
-    plugins: [
-        new analyser()
-    ],
+    // plugins: [
+    //     new analyser()
+    // ],
     resolve: {
         extensions: [".ts", ".tsx", ".js"],
         alias: {
