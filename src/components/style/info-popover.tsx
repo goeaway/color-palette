@@ -21,6 +21,7 @@ export default InfoPopover;
 const InfoPopoverContent = styled.div`
     padding: 2rem;
     border-radius: 3px;
+    min-width: 15rem;
     background: white;
     box-shadow:
         0 2.8px 2.2px rgba(0, 0, 0, 0.02),

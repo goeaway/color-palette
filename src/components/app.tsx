@@ -1,33 +1,25 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, FC } from "react";
 import styled from "styled-components";
 import Palette from "./palette";
-import { PaletteDTO } from "../types";
+import { PaletteDTO, Settings, HSL } from "../types";
 import { storePalette, removePaletteFromStorage, getRandomPalette, getPalettes } from "../services/palette-service";
-import "../utils/extend-array";
 import { FaPlus, FaDiceSix, FaCog } from "react-icons/fa";
 import CircularIconButton from "./style/circular-icon-button";
 import {DragDropContext, DropResult, Droppable} from "react-beautiful-dnd";
 import { getRandomColor } from "../utils/get-random-color";
 import Backdrop from "./style/backdrop";
 import InfoPopover from "./style/info-popover";
-import { useSelector, useDispatch } from "react-redux";
-import { SettingsState } from "../state/types";
-import { setRange, setMinPalette } from "../state/actions/settings-actions";
+import SettingsPopover from "./settings-popover";
+import { getSettings, storeSettings } from "../services/settings-service";
 
 const MAX_PALETTES = 10;
+const START_PALETTES = 5;
 
-const App: React.FC = () => {
-    const settings = useSelector((settingsState: SettingsState) => settingsState);
-    const dispatch = useDispatch();
-    const [palettes, setPalettes] = useState<Array<PaletteDTO>>([]);
+const App: FC = () => {
+    const [settings, setSettings] = useState<Settings>(getSettings());
+    const [palettes, setPalettes] = useState<Array<PaletteDTO>>(getPalettes(START_PALETTES));
     const [canAdd, setCanAdd] = useState(true);
     const [settingsPopoverOpen, setSettingsPopoverOpen] = useState(false);
-
-    useEffect(() => {
-        if(settings) {
-            setPalettes(getPalettes(settings.minPalette, settings.luminenceStep, settings.range));
-        }
-    }, [settings]);
 
     useEffect(() => {
         setCanAdd(palettes.length <= MAX_PALETTES);
@@ -44,10 +36,17 @@ const App: React.FC = () => {
             }
         }
     }, [palettes]);
+
+    useEffect(() => {
+        // store any changes to local storage
+        if(settings != getSettings())  {
+            storeSettings(settings);
+        }
+    }, [settings]);
     
     function addPaletteHandler() {
         if(canAdd) {
-            setPalettes(p => [...p, getRandomPalette(p.length, settings.luminenceStep, settings.range)]);
+            setPalettes(p => [...p, getRandomPalette(p.length)]);
         }
     }
 
@@ -73,13 +72,11 @@ const App: React.FC = () => {
                 id: palette.id, 
                 locked: lock, 
                 normalColor: palette.normalColor, 
-                luminenceStep: palette.luminenceStep, 
-                range: palette.range,
                 index: paletteIndex
             });
     }
 
-    function shiftPaletteHandler(paletteIndex: number, newColor: string) {
+    function shiftPaletteHandler(paletteIndex: number, newColor: HSL) {
         const palette = palettes[paletteIndex];
         updatePalette(
             paletteIndex, 
@@ -87,8 +84,6 @@ const App: React.FC = () => {
                 id: palette.id, 
                 locked: palette.locked, 
                 normalColor: newColor, 
-                luminenceStep: palette.luminenceStep, 
-                range: palette.range,
                 index: paletteIndex
             });
     }
@@ -107,6 +102,10 @@ const App: React.FC = () => {
 
     function settingsPopoverClosedHandler() {
         setSettingsPopoverOpen(false);
+    }
+
+    function settingsPopoverOnChangeHandler(settings: Settings) {
+        setSettings(settings);
     }
 
     function onDragEndHandler(result: DropResult) {
@@ -133,9 +132,7 @@ const App: React.FC = () => {
                     <TagLine>Create a brand new color scheme for your next project. Mix and match colors you like with this drag and drop palette creator.</TagLine>
                 </NavBarInner>
                 <NavBarInner>
-                    <InfoPopover onClose={settingsPopoverClosedHandler} show={settingsPopoverOpen} content={(
-                        <button onClick={() => dispatch(setMinPalette(settings.minPalette + 1))}>Min {settings.minPalette}</button>
-                    )}>
+                    <InfoPopover onClose={settingsPopoverClosedHandler} show={settingsPopoverOpen} content={(<SettingsPopover settings={settings} onChange={settingsPopoverOnChangeHandler} />)}>
                         <CircularIconButton 
                             lg 
                             onClick={settingsButtonClickHandler}
@@ -168,7 +165,7 @@ const App: React.FC = () => {
                 <Droppable droppableId="paletteContainer" direction="horizontal">
                     {provided => (
                         <PaletteContainer {...provided.droppableProps} ref={provided.innerRef}>
-                            {palettes.map((p, i) => <Palette index={i} palette={p} key={p.id} onDelete={deletePaletteHandler} onShiftPalette={shiftPaletteHandler} onLockPalette={lockPaletteHandler} />)}
+                            {palettes.map((p, i) => <Palette index={i} palette={p} settings={settings} key={p.id} onDelete={deletePaletteHandler} onShiftPalette={shiftPaletteHandler} onLockPalette={lockPaletteHandler} />)}
                             {provided.placeholder}
                             <Backdrop />
                         </PaletteContainer>

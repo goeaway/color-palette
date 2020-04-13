@@ -1,6 +1,13 @@
 import { RGB, HSL } from "../types";
 
+export const Black : HSL = { h: 0, s: 0, l: 0 };
+export const White : HSL = { h: 0, s: 100, l: 100 };
+
 export function hexToRGB(hex: string) : RGB {
+    if(!stringValidHex(hex)) {
+        return undefined;
+    }
+
     let r = "0", g = "0", b = "0";
 
     // 3 digits
@@ -19,10 +26,18 @@ export function hexToRGB(hex: string) : RGB {
 }
 
 export function hexToHSL(hex: string) {
+    if(!stringValidHex(hex)) {
+        return undefined;
+    }
+
     return RGBToHSL(hexToRGB(hex));
 }
 
 export function RGBToHex(rgb: RGB) : string {
+    if(!rgb) {
+        return undefined;
+    }
+
     let r = rgb.r.toString(16);
     let g = rgb.g.toString(16);
     let b = rgb.b.toString(16);
@@ -41,6 +56,10 @@ export function RGBToHex(rgb: RGB) : string {
 }
 
 export function RGBToHSL(rgb: RGB) : HSL {
+    if(!rgb) {
+        return undefined;
+    }
+
     // Make r, g, and b fractions of 1
     const r = rgb.r / 255;
     const g = rgb.g / 255;
@@ -128,12 +147,112 @@ export function HSLToRGB(hsl: HSL) : RGB {
       return { r, g, b };
 }
 
-export function getContrastYIQ(hex: string){
-    if(!hex) {
-        return "black";
+export function getContrastYIQ(color: HSL){
+    if(!color) {
+        return 'rgba(0,0,0,.87)';
     }
 
-    const {r,g,b} = hexToRGB(hex);
+    const {r,g,b} = HSLToRGB(color);
 	const yiq = ((r*299)+(g*587)+(b*114))/1000;
 	return yiq >= 128 ? 'rgba(0,0,0,.87)' : '#e0e0e0';
+}
+
+export function convertToTypeString(value: HSL, type: string) : string {
+    switch(type) {
+        case "hsl":
+            return convertHSLToString(value);
+        case "hex":
+            return HSLToHex(value);
+        case "rgb":
+            return convertRGBToString(HSLToRGB(value));
+    }
+}
+
+export function convertHSLToString(value: HSL) {
+    return `hsl(${value.h}, ${value.s}%, ${value.l}%)`;
+}
+
+export function convertRGBToString(value: RGB) {
+    return `rgb(${value.r}, ${value.g}, ${value.b})`;
+}
+
+export function convertStringToRGB(value: string) : RGB {
+    if(!value) {
+        return undefined;
+    }
+
+    // trim, lower and remove whitespace
+    const primed = value.trim().toLowerCase().replace(/\s/g, "");
+
+    if(primed.indexOf("rgb(") === -1 || primed.indexOf(")") !== primed.length - 1) {
+        return undefined;
+    }
+
+    const stripped = primed.replace("rgb(", "").replace(")", "");
+
+    const split = stripped.split(",");
+    if(split.length !== 3) {
+        return undefined;
+    }
+
+    const r = parseInt(split[0].trim());
+    const g = parseInt(split[1].trim());
+    const b = parseInt(split[2].trim());
+
+    if(isNaN(r) || isNaN(g) || isNaN(b)) {
+        return undefined;
+    }
+
+    return {r,g,b};
+}
+
+export function convertStringToHSL(value: string) : HSL {
+    if(!value) {
+        return undefined;
+    }
+
+    const primed = value.trim().toLowerCase().replace(/\s/g, "");
+
+    if(primed.indexOf("hsl(") === -1 || primed.indexOf(")") !== primed.length - 1) {
+        return undefined;
+    }
+
+    const stripped = primed.replace("hsl(", "").replace(")", "");
+
+    const split = stripped.split(",");
+    if(split.length !== 3) {
+        return undefined;
+    }
+
+    const h = parseInt(split[0].trim());
+    const s = parseInt(split[1].replace("%","").trim());
+    const l = parseInt(split[2].replace("%","").trim());
+
+    if(isNaN(h) || isNaN(s) || isNaN(l)) {
+        return undefined;
+    }
+
+    return {h,s,l};
+}
+
+export function stringValidHex(value: string) {
+    if(!value) {
+        return false;
+    }
+
+    let valid = value.indexOf("#") === 0 && (value.length === 4 || value.length === 7);
+
+    if(!valid) {
+        return false;
+    }
+
+    const allowed = "0123456789abcdef";
+    for(let i = 1; i < value.length; i++) {
+        if(allowed.indexOf(value.charAt(i)) === -1) {
+            valid = false;
+            break;
+        }
+    }
+
+    return valid;
 }

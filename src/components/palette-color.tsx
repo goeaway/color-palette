@@ -1,52 +1,72 @@
-import * as React from "react";
+import React, { useState, useEffect, ChangeEvent, useRef} from "react";
 import styled, { css } from "styled-components";
-import { getContrastYIQ } from "../utils/color-converter";
-import { FaPen, FaTimes, FaCheck } from "react-icons/fa";
+import { getContrastYIQ, White, HSLToHex, convertToTypeString, hexToHSL, convertStringToHSL, RGBToHSL, convertStringToRGB } from "../utils/colors";
+import { FaPen, FaTimes, FaExclamation, FaCheck } from "react-icons/fa";
 import CircularIconButton from "./style/circular-icon-button";
 import useClickOutside from "../hooks/use-click-outside";
 import useKeyPress from "../hooks/use-key-press";
+import { HSL } from "../types";
 
 export interface PaletteColorProps {
-    color: string;
+    color: HSL;
+    colorType: string;
     editable: boolean;
-    onEdited?: (value: string) => void;
+    onEdited?: (value: HSL) => void;
 }
 
-const PaletteColor: React.FC<PaletteColorProps> = ({ color, editable, onEdited }) => {
-    const [editing, setEditing] = React.useState(false);
-    const [newColor, setNewColor] = React.useState("");
-    const inputRef = React.useRef<HTMLInputElement>(null);
+const PaletteColor: React.FC<PaletteColorProps> = ({ color, editable, onEdited, colorType }) => {
+    const [editing, setEditing] = useState(false);
+    const [newColor, setNewColor] = React.useState(White);
+    const [stringColor, setStringColor] = useState("");
 
+    const inputRef = useRef<HTMLInputElement>(null);
     const clickOutSideRef = useClickOutside(() => editing && setEditing(false));
 
     const enter = useKeyPress("Enter");
     const escape = useKeyPress("Escape");
 
-    React.useEffect(() => {
+    useEffect(() => {
         if(enter && editing) {
             saveEditButtonClickHandler();
         }
     }, [enter]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if(escape && editing) {
             cancelEditButtonClickHandler();
         }
     }, [escape]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if(editing) {
             inputRef.current.select();
-            if(inputRef.current.value.length > 1) {
-                inputRef.current.setSelectionRange(1, inputRef.current.value.length);
-            }
+            inputRef.current.setSelectionRange(0, inputRef.current.value.length);
         }
     }, [editing]);
+
+    useEffect(() => {
+        let newHSL: HSL;
+        switch(colorType) {
+            case "hex": {
+                newHSL = hexToHSL(stringColor);
+                break;
+            }
+            case "hsl": {
+                newHSL = convertStringToHSL(stringColor);
+                break;
+            }
+            case "rgb": {
+                newHSL = RGBToHSL(convertStringToRGB(stringColor));
+                break;
+            }
+        }
+        setNewColor(newHSL);
+    }, [stringColor]);
 
     const editButtonClickHandler = () => {
         if(editable && !editing) {
             setEditing(true);
-            setNewColor(color);
+            setStringColor(convertToTypeString(color, colorType));
         }
     }
 
@@ -55,22 +75,23 @@ const PaletteColor: React.FC<PaletteColorProps> = ({ color, editable, onEdited }
     }
 
     const saveEditButtonClickHandler = () => {
-        setEditing(false);
-        onEdited(newColor);
-    }
-
-    const inputChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if(event.target.value.length < 8) {
-            setNewColor(event.target.value);
+        if(newColor) {
+            setEditing(false);
+            onEdited(newColor);
         }
     }
 
+    const inputChangeHandler = (event: ChangeEvent<HTMLInputElement>) => {
+        setStringColor(event.target.value);
+    }
+
     const contrastColor = getContrastYIQ(color);
+    const colorHex = HSLToHex(color);
 
     return (
-        <Container background={color} ref={clickOutSideRef}>
-            <ColorName color={contrastColor} editable={editable} showing={!editing} onDoubleClick={editButtonClickHandler} >{color}</ColorName>
-            <ColorInput ref={inputRef} color={contrastColor} type="text" showing={editing} value={newColor} onChange={inputChangeHandler} />
+        <Container background={colorHex} ref={clickOutSideRef}>
+            <ColorName color={contrastColor} editable={editable} showing={!editing} onDoubleClick={editButtonClickHandler}>{convertToTypeString(color, colorType)}</ColorName>
+            <ColorInput ref={inputRef} color={contrastColor} type="text" showing={editing} value={stringColor} onChange={inputChangeHandler} />
 
             <EditIconContainer showing={editable && !editing} color={contrastColor}>
                 <CircularIconButton titleDisplayDirection="left" title="Edit source color" onClick={editButtonClickHandler}>
@@ -79,8 +100,8 @@ const PaletteColor: React.FC<PaletteColorProps> = ({ color, editable, onEdited }
             </EditIconContainer>
 
             <EditIconContainer showing={editable && editing} color={contrastColor}>
-                <CircularIconButton titleDisplayDirection="left" title="Confirm" onClick={saveEditButtonClickHandler}>
-                    <FaCheck />
+                <CircularIconButton titleDisplayDirection="left" title={!!newColor ? "Confirm" : "Color invalid"} onClick={saveEditButtonClickHandler}>
+                    {!!newColor ? <FaCheck /> : <FaExclamation />}
                 </CircularIconButton>
                 <CircularIconButton titleDisplayDirection="left" title="Cancel" onClick={cancelEditButtonClickHandler}>
                     <FaTimes />
@@ -110,31 +131,6 @@ const ColorName = styled.span`
         visibility: visible;
     `}
 `
-
-interface ColorInputStyleProps {
-    showing: boolean;
-    color: string;
-}
-
-const ColorInput = styled.input`
-    max-width: 80px;
-    font-size: 16px;
-    position: absolute;
-    padding: .35rem;
-    text-align: center;
-    opacity: 0;
-    visibility: hidden;
-    background: transparent;
-    outline: none;
-    border: none;
-    color: ${(p: ColorInputStyleProps) => p.color};
-    font-family: 'Roboto';
-
-    ${(p: ColorInputStyleProps) => p.showing && css`
-        opacity: 1;
-        visibility: visible;
-    `}
-`;
 
 interface ContainerStyleProps {
     background: string;
@@ -169,3 +165,27 @@ const EditIconContainer = styled.div`
         visibility: visible;
     `}
 `
+
+interface ColorInputStyleProps {
+    showing: boolean;
+    color: string;
+}
+
+const ColorInput = styled.input`
+    font-size: 16px;
+    position: absolute;
+    padding: .35rem;
+    text-align: center;
+    opacity: 0;
+    visibility: hidden;
+    background: transparent;
+    outline: none;
+    border: none;
+    color: ${(p: ColorInputStyleProps) => p.color};
+    font-family: 'Roboto';
+
+    ${(p: ColorInputStyleProps) => p.showing && css`
+        opacity: 1;
+        visibility: visible;
+    `}
+`;

@@ -1,23 +1,23 @@
 import React, { useState, useEffect} from "react";
-import { PaletteDTO, HSL } from "../types";
+import { PaletteDTO, HSL, Settings } from "../types";
 import styled, { css } from "styled-components";
 import PaletteColor from "./palette-color";
-import { hexToHSL, HSLToHex, getContrastYIQ } from "../utils/color-converter";
+import { hexToHSL, HSLToHex, getContrastYIQ, Black, White } from "../utils/colors";
 import { FaTrash, FaLock, FaLockOpen, FaCopy, FaArrowUp, FaArrowDown } from "react-icons/fa";
 import CircularIconButton from "./style/circular-icon-button";
 import { Draggable } from "react-beautiful-dnd";
-import "../utils/extend-array";
 
 export interface PaletteProps {
     palette: PaletteDTO;
+    settings: Settings;
     index: number;
     onDelete: (id: number) => void;
-    onShiftPalette: (index: number, newColor: string) => void;
+    onShiftPalette: (index: number, newColor: HSL) => void;
     onLockPalette: (index: number, lock: boolean) => void;
 }
 
-const Palette: React.FC<PaletteProps> = ({ palette, index, onDelete, onShiftPalette, onLockPalette }) => {
-    const [colors, setColors] = useState<Array<string>>([]);
+const Palette: React.FC<PaletteProps> = ({ palette, settings, index, onDelete, onShiftPalette, onLockPalette }) => {
+    const [colors, setColors] = useState<Array<HSL>>([]);
     const [showControls, setShowControls] = useState(false);
     const [copiedToClipboard, setCopiedToClipboard] = useState(false);
     const [isIn, setIsIn] = useState(false);
@@ -31,27 +31,24 @@ const Palette: React.FC<PaletteProps> = ({ palette, index, onDelete, onShiftPale
     }, []);
 
     useEffect(() => {
-        const hsl = hexToHSL(palette.normalColor);
+        const { normalColor: hsl} = palette;
         
         const lightHSLs: Array<HSL> = [];
         const darkHSLs: Array<HSL> = [];
         
-        for(let i = 0; i < palette.range; i++) {
+        for(let i = 0; i < settings.range; i++) {
             const dSource = i === 0 ? hsl.l : darkHSLs[i-1].l;
             const lSource = i === 0 ? hsl.l : lightHSLs[i-1].l;
             
-            const dL = dSource - palette.luminenceStep;
-            const lL = lSource + palette.luminenceStep;
+            const dL = dSource - settings.luminenceStep;
+            const lL = lSource + settings.luminenceStep;
             
             lightHSLs.push({ h: hsl.h, s: hsl.s, l: lL > 100 ? 100 : lL });
             darkHSLs.push({ h: hsl.h, s: hsl.s, l: dL < 0 ? 0 : dL });
         }
         
-        const lightHex = lightHSLs.map(hsl => HSLToHex(hsl));
-        const darkHex = darkHSLs.map(hsl => HSLToHex(hsl)).reverse();
-        
-        setColors([...darkHex, palette.normalColor, ...lightHex]);
-    }, [palette.normalColor]);
+        setColors([...darkHSLs.reverse(), palette.normalColor, ...lightHSLs]);
+    }, [palette.normalColor, settings]);
 
     useEffect(() => {
         if(copiedToClipboard) {
@@ -77,14 +74,14 @@ const Palette: React.FC<PaletteProps> = ({ palette, index, onDelete, onShiftPale
     }
 
     function onScrollUp () {
-        if(colors && colors.length && colors[0] !== "#000000" && !palette.locked) {
+        if(colors && colors.length && colors[0].l !== 0 && !palette.locked) {
             // shift to the middle index - 1
             onShiftPalette(index, colors[(colors.length / 2 | 0) - 1]);
         }
     }
 
     function onScrollDown () {
-        if(colors && colors.length && colors[colors.length -1] !== "#ffffff" && !palette.locked) {
+        if(colors && colors.length && colors[colors.length -1].l !== 100 && !palette.locked) {
             // shift to the middle index + 1
             onShiftPalette(index, colors[(colors.length / 2 | 0) + 1]);
         }
@@ -107,7 +104,7 @@ const Palette: React.FC<PaletteProps> = ({ palette, index, onDelete, onShiftPale
         setCopiedToClipboard(true);
     }
 
-    function paletteNormalColorEditedHandler(value: string) {
+    function paletteNormalColorEditedHandler(value: HSL) {
         onShiftPalette(index, value);
     }
 
@@ -133,16 +130,16 @@ const Palette: React.FC<PaletteProps> = ({ palette, index, onDelete, onShiftPale
                         </VerticalMenu>
                     </PaletteControls>
 
-                    <ScrollButton showing={showControls && !snapshot.isDragging && colors[0] !== "#000000" && !palette.locked} color={getContrastYIQ(colors[0])}>
+                    <ScrollButton showing={showControls && !snapshot.isDragging && colors[0].l !== 0 && !palette.locked} color={getContrastYIQ(colors[0])}>
                         <CircularIconButton titleDisplayDirection="left" title="Scroll up for darker tints" onClick={onScrollUp}><FaArrowUp/></CircularIconButton>
                     </ScrollButton>
                     
-                    <ScrollButton bottom showing={showControls && !snapshot.isDragging && colors[colors.length -1] !== "#ffffff" && !palette.locked} color={getContrastYIQ(colors[colors.length -1])}>
+                    <ScrollButton bottom showing={showControls && !snapshot.isDragging && colors[colors.length -1].l !== 100 && !palette.locked} color={getContrastYIQ(colors[colors.length -1])}>
                         <CircularIconButton titleDisplayDirection="left" title="Scroll down for lighter tints" onClick={onScrollDown}><FaArrowDown/></CircularIconButton>
                     </ScrollButton>
                     
                     <LockIndicator showing={palette.locked && !showControls} color={getContrastYIQ(colors[0])}><FaLock /></LockIndicator>
-                    {colors.map((c, index) => <PaletteColor key={index} editable={c === palette.normalColor && showControls && !snapshot.isDragging && !palette.locked} onEdited={paletteNormalColorEditedHandler} color={c} />)}
+                    {colors.map((c, index) => <PaletteColor key={index} colorType={settings.preferredColorType} editable={c === palette.normalColor && showControls && !snapshot.isDragging && !palette.locked} onEdited={paletteNormalColorEditedHandler} color={c} />)}
                 </Container>
             )}
         </Draggable>

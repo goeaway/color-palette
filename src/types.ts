@@ -1,8 +1,6 @@
 export interface PaletteDTO {
     id: number;
-    normalColor: string;
-    luminenceStep: number;
-    range: number;
+    normalColor: HSL;
     locked: boolean;
     index: number;
 }
@@ -19,7 +17,8 @@ export interface HSL {
     l: number;
 }
 
-export interface Setting {
-    type: string;
-    value: string;
+export interface Settings {
+    preferredColorType: string;
+    luminenceStep: number;
+    range: number;
 }
