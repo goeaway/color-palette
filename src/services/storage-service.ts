@@ -24,13 +24,17 @@ export const get = <T>(key: string) : T => {
         return undefined;
     }
 
-    const localStorageStr = window.localStorage.getItem(key);
-
-    if(localStorageStr === null) {
+    try {
+        const localStorageStr = window.localStorage.getItem(key);
+    
+        if(localStorageStr === null) {
+            return undefined;
+        }
+    
+        return JSON.parse(decode(localStorageStr)) as T;
+    } catch (err) {
         return undefined;
     }
-
-    return JSON.parse(decode(localStorageStr)) as T;
 }
 
 export const set = <T>(key: string, value: T) => {
@@ -38,7 +42,11 @@ export const set = <T>(key: string, value: T) => {
         throw "Key was not usable (" + key + ")";
     }
 
-    window.localStorage.setItem(key, encode(JSON.stringify(value)));
+    try {
+        window.localStorage.setItem(key, encode(JSON.stringify(value)));
+    } catch (err) {
+
+    }
 }
 
 export const getMatchingKey = <T>(keyPattern: string) : Array<T> => {

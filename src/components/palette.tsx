@@ -2,7 +2,7 @@ import React, { useState, useEffect} from "react";
 import { PaletteDTO, HSL, Settings } from "../types";
 import styled, { css } from "styled-components";
 import PaletteColor from "./palette-color";
-import { hexToHSL, HSLToHex, getContrastYIQ, Black, White } from "../utils/colors";
+import { hexToHSL, HSLToHex, getContrastYIQ, Black, White, convertToTypeString } from "../utils/colors";
 import { FaTrash, FaLock, FaLockOpen, FaCopy, FaArrowUp, FaArrowDown } from "react-icons/fa";
 import CircularIconButton from "./style/circular-icon-button";
 import { Draggable } from "react-beautiful-dnd";
@@ -100,7 +100,7 @@ const Palette: React.FC<PaletteProps> = ({ palette, settings, index, onDelete, o
     }
 
     async function copyButtonClickHandler() {
-        await navigator.clipboard.writeText(colors.join("\n"));
+        await navigator.clipboard.writeText(colors.map(c => convertToTypeString(c, settings.preferredColorType)).join("\n"));
         setCopiedToClipboard(true);
     }
 
