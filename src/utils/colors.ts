@@ -203,6 +203,10 @@ export function convertStringToRGB(value: string) : RGB {
         return undefined;
     }
 
+    if(r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
+        return undefined;
+    }
+
     return {r,g,b};
 }
 
@@ -229,6 +233,10 @@ export function convertStringToHSL(value: string) : HSL {
     const l = parseInt(split[2].replace("%","").trim());
 
     if(isNaN(h) || isNaN(s) || isNaN(l)) {
+        return undefined;
+    }
+
+    if(h < 0 || h > 360 || s < 0 || s > 100 || l < 0 || l > 100) {
         return undefined;
     }
 
