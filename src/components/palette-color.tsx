@@ -20,6 +20,7 @@ const PaletteColor: React.FC<PaletteColorProps> = ({ color, editable, onEdited, 
     const [stringColor, setStringColor] = useState("");
 
     const inputRef = useRef<HTMLInputElement>(null);
+    const colorNameRef = useRef<HTMLSpanElement>(null);
     const clickOutSideRef = useClickOutside(() => editing && setEditing(false));
 
     const enter = useKeyPress("Enter");
@@ -63,6 +64,16 @@ const PaletteColor: React.FC<PaletteColorProps> = ({ color, editable, onEdited, 
         setNewColor(newHSL);
     }, [stringColor]);
 
+    const colorNameSingleClickHandler = () => {
+        if(!editing) {
+            const selection = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(colorNameRef.current);
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+    }
+
     const editButtonClickHandler = () => {
         if(editable && !editing) {
             setEditing(true);
@@ -90,7 +101,7 @@ const PaletteColor: React.FC<PaletteColorProps> = ({ color, editable, onEdited, 
 
     return (
         <Container background={colorHex} ref={clickOutSideRef}>
-            <ColorName color={contrastColor} editable={editable} showing={!editing} onDoubleClick={editButtonClickHandler}>{convertToTypeString(color, colorType)}</ColorName>
+            <ColorName ref={colorNameRef} color={contrastColor} editable={editable} showing={!editing} onClick={colorNameSingleClickHandler} onDoubleClick={editButtonClickHandler}>{convertToTypeString(color, colorType)}</ColorName>
             <ColorInput ref={inputRef} color={contrastColor} type="text" showing={editing} value={stringColor} onChange={inputChangeHandler} />
 
             <EditIconContainer showing={editable && !editing} color={contrastColor}>
@@ -121,7 +132,7 @@ interface ColorNameStyleProps {
 
 const ColorName = styled.span`
     color: ${(p: ColorNameStyleProps) => p.color};
-    cursor: ${(p: ColorNameStyleProps) => p.editable && "pointer !important"};
+    cursor: pointer !important;
     opacity: 0;
     visibility: hidden;
     font-weight: 500;

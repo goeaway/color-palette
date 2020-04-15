@@ -199,7 +199,6 @@ interface PaletteControlsStyleProps {
 
 const PaletteControls = styled.div`
     position: absolute;
-    width: 100%;
     z-index: 1000;
     top: -100%;
     padding: .35rem;
