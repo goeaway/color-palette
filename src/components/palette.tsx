@@ -3,9 +3,10 @@ import { PaletteDTO, HSL, Settings } from "../types";
 import styled, { css } from "styled-components";
 import PaletteColor from "./palette-color";
 import { hexToHSL, HSLToHex, getContrastYIQ, Black, White, convertToTypeString } from "../utils/colors";
-import { FaTrash, FaLock, FaLockOpen, FaCopy, FaArrowUp, FaArrowDown } from "react-icons/fa";
+import { FaTrash, FaLock, FaLockOpen, FaCopy, FaArrowUp, FaArrowDown, FaDiceSix } from "react-icons/fa";
 import CircularIconButton from "./style/circular-icon-button";
 import { Draggable } from "react-beautiful-dnd";
+import { getRandomColor } from "../utils/get-random-color";
 
 export interface PaletteProps {
     palette: PaletteDTO;
@@ -76,6 +77,10 @@ const Palette: React.FC<PaletteProps> = ({ palette, settings, index, onDelete, o
         setTimeout(() => onDelete(palette.id), 300);
     }
 
+    function randomiseButtonClickHandler() {
+        onShiftPalette(index, getRandomColor());
+    }
+
     function onScrollUp () {
         if(colors && colors.length && colors[0].l - settings.luminenceStep >= LOWEST_LUM && !palette.locked) {
             // shift to the middle index - 1
@@ -130,6 +135,7 @@ const Palette: React.FC<PaletteProps> = ({ palette, settings, index, onDelete, o
                             <CircularIconButton titleDisplayDirection="right" title={palette.locked ? "Unlock palette" : "Lock palette"} onClick={lockButtonClickHandler}>{palette.locked ? <FaLock /> : <FaLockOpen /> }</CircularIconButton>
                             <CircularIconButton titleDisplayDirection="right" title="Remove palette" onClick={deleteButtonClickHandler}><FaTrash /></CircularIconButton>
                             <CircularIconButton titleDisplayDirection="right" title={copiedToClipboard ? "Copied!" : "Copy palette to clipboard"} onClick={copyButtonClickHandler}><FaCopy /></CircularIconButton>
+                            <CircularIconButton titleDisplayDirection="right" title="Randomise palette" onClick={randomiseButtonClickHandler}><FaDiceSix /></CircularIconButton>
                         </VerticalMenu>
                     </PaletteControls>
 
