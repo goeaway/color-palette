@@ -77,14 +77,14 @@ const Palette: React.FC<PaletteProps> = ({ palette, settings, index, onDelete, o
     }
 
     function onScrollUp () {
-        if(colors && colors.length && colors[0].l !== LOWEST_LUM && !palette.locked) {
+        if(colors && colors.length && colors[0].l - settings.luminenceStep >= LOWEST_LUM && !palette.locked) {
             // shift to the middle index - 1
             onShiftPalette(index, colors[(colors.length / 2 | 0) - 1]);
         }
     }
 
     function onScrollDown () {
-        if(colors && colors.length && colors[colors.length -1].l !== HIGHEST_LUM && !palette.locked) {
+        if(colors && colors.length && colors[colors.length -1].l + settings.luminenceStep <= HIGHEST_LUM && !palette.locked) {
             // shift to the middle index + 1
             onShiftPalette(index, colors[(colors.length / 2 | 0) + 1]);
         }
@@ -133,11 +133,11 @@ const Palette: React.FC<PaletteProps> = ({ palette, settings, index, onDelete, o
                         </VerticalMenu>
                     </PaletteControls>
 
-                    <ScrollButton showing={showControls && !snapshot.isDragging && colors[0].l !== LOWEST_LUM && !palette.locked} color={getContrastYIQ(colors[0])}>
+                    <ScrollButton showing={showControls && !snapshot.isDragging && colors[0].l - settings.luminenceStep >= LOWEST_LUM && !palette.locked} color={getContrastYIQ(colors[0])}>
                         <CircularIconButton titleDisplayDirection="left" title="Scroll up for darker tints" onClick={onScrollUp}><FaArrowUp/></CircularIconButton>
                     </ScrollButton>
                     
-                    <ScrollButton bottom showing={showControls && !snapshot.isDragging && colors[colors.length -1].l !== HIGHEST_LUM && !palette.locked} color={getContrastYIQ(colors[colors.length -1])}>
+                    <ScrollButton bottom showing={showControls && !snapshot.isDragging && colors[colors.length -1].l + settings.luminenceStep <= HIGHEST_LUM && !palette.locked} color={getContrastYIQ(colors[colors.length -1])}>
                         <CircularIconButton titleDisplayDirection="left" title="Scroll down for lighter tints" onClick={onScrollDown}><FaArrowDown/></CircularIconButton>
                     </ScrollButton>
                     

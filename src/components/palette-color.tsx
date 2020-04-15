@@ -125,6 +125,7 @@ const ColorName = styled.span`
     opacity: 0;
     visibility: hidden;
     font-weight: 500;
+    font-size: 16px;
 
     ${(p: ColorNameStyleProps) => p.showing && css`
         opacity: 1;
