@@ -2,11 +2,13 @@ import React, { useState, useEffect} from "react";
 import { PaletteDTO, HSL, Settings } from "../types";
 import styled, { css } from "styled-components";
 import PaletteColor from "./palette-color";
-import { hexToHSL, HSLToHex, getContrastYIQ, Black, White, convertToTypeString } from "../utils/colors";
+import { hexToHSL, HSLToHex, getContrastYIQ, Black, White, convertToTypeString, generateColors } from "../utils/colors";
 import { FaTrash, FaLock, FaLockOpen, FaCopy, FaArrowUp, FaArrowDown, FaDiceSix } from "react-icons/fa";
 import CircularIconButton from "./style/circular-icon-button";
 import { Draggable } from "react-beautiful-dnd";
 import { getRandomColor } from "../utils/get-random-color";
+import { LOWEST_LUM, HIGHEST_LUM } from "../consts";
+import useResetFlagAfter from "../hooks/use-reset-flag-after";
 
 export interface PaletteProps {
     palette: PaletteDTO;
@@ -17,13 +19,10 @@ export interface PaletteProps {
     onLockPalette: (index: number, lock: boolean) => void;
 }
 
-const LOWEST_LUM = 1;
-const HIGHEST_LUM = 99;
-
 const Palette: React.FC<PaletteProps> = ({ palette, settings, index, onDelete, onShiftPalette, onLockPalette }) => {
     const [colors, setColors] = useState<Array<HSL>>([]);
     const [showControls, setShowControls] = useState(false);
-    const [copiedToClipboard, setCopiedToClipboard] = useState(false);
+    const [copiedToClipboard, setCopiedToClipboard] = useResetFlagAfter(1500);
     const [isIn, setIsIn] = useState(false);
 
     useEffect(() => {
@@ -35,34 +34,9 @@ const Palette: React.FC<PaletteProps> = ({ palette, settings, index, onDelete, o
     }, []);
 
     useEffect(() => {
-        const { normalColor: hsl} = palette;
-        
-        const lightHSLs: Array<HSL> = [];
-        const darkHSLs: Array<HSL> = [];
-        
-        for(let i = 0; i < settings.range; i++) {
-            const dSource = i === 0 ? hsl.l : darkHSLs[i-1].l;
-            const lSource = i === 0 ? hsl.l : lightHSLs[i-1].l;
-            
-            const dL = dSource - settings.luminenceStep;
-            const lL = lSource + settings.luminenceStep;
-            
-            lightHSLs.push({ h: hsl.h, s: hsl.s, l: lL > HIGHEST_LUM ? HIGHEST_LUM : lL });
-            darkHSLs.push({ h: hsl.h, s: hsl.s, l: dL < LOWEST_LUM ? LOWEST_LUM : dL });
-        }
-        
-        setColors([...darkHSLs.reverse(), palette.normalColor, ...lightHSLs]);
+        const colors = generateColors(palette.normalColor, settings.range, settings.luminenceStep, LOWEST_LUM, HIGHEST_LUM);
+        setColors(colors);
     }, [palette.normalColor, settings]);
-
-    useEffect(() => {
-        if(copiedToClipboard) {
-            const timeout = setTimeout(() => {
-                setCopiedToClipboard(false);
-            }, 1500);
-
-            return () => clearTimeout(timeout);
-        }
-    }, [copiedToClipboard]);
 
     function onMouseEnterHandler() {
         setShowControls(true);

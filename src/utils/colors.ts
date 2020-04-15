@@ -264,3 +264,21 @@ export function stringValidHex(value: string) {
 
     return valid;
 }
+
+export function generateColors(sourceColor: HSL, range: number, luminenceStep: number, minLum: number, maxLum: number) {
+    const lightHSLs: Array<HSL> = [];
+    const darkHSLs: Array<HSL> = [];
+    
+    for(let i = 0; i < range; i++) {
+        const dSource = i === 0 ? sourceColor.l : darkHSLs[i-1].l;
+        const lSource = i === 0 ? sourceColor.l : lightHSLs[i-1].l;
+        
+        const dL = dSource - luminenceStep;
+        const lL = lSource + luminenceStep;
+        
+        lightHSLs.push({ h: sourceColor.h, s: sourceColor.s, l: lL > maxLum ? maxLum : lL });
+        darkHSLs.push({ h: sourceColor.h, s: sourceColor.s, l: dL < minLum ? minLum : dL });
+    }
+
+    return [...darkHSLs.reverse(), sourceColor, ...lightHSLs];
+}

@@ -3,7 +3,7 @@ import styled from "styled-components";
 import Palette from "./palette";
 import { PaletteDTO, Settings, HSL } from "../types";
 import { storePalette, removePaletteFromStorage, getRandomPalette, getPalettes } from "../services/palette-service";
-import { FaPlus, FaDiceSix, FaCog } from "react-icons/fa";
+import { FaPlus, FaDiceSix, FaCog, FaCopy } from "react-icons/fa";
 import CircularIconButton from "./style/circular-icon-button";
 import {DragDropContext, DropResult, Droppable} from "react-beautiful-dnd";
 import { getRandomColor } from "../utils/get-random-color";
@@ -11,6 +11,9 @@ import Backdrop from "./style/backdrop";
 import InfoPopover from "./style/info-popover";
 import SettingsPopover from "./settings-popover";
 import { getSettings, storeSettings } from "../services/settings-service";
+import useResetFlagAfter from "../hooks/use-reset-flag-after";
+import { convertToTypeString, generateColors } from "../utils/colors";
+import { LOWEST_LUM, HIGHEST_LUM } from "../consts";
 
 const MAX_PALETTES = 10;
 const START_PALETTES = 5;
@@ -20,6 +23,7 @@ const App: FC = () => {
     const [palettes, setPalettes] = useState<Array<PaletteDTO>>(getPalettes(START_PALETTES));
     const [canAdd, setCanAdd] = useState(true);
     const [settingsPopoverOpen, setSettingsPopoverOpen] = useState(false);
+    const [copiedToClipboard, setCopiedToClipboard] = useResetFlagAfter(1500);
 
     useEffect(() => {
         setCanAdd(palettes.length <= MAX_PALETTES);
@@ -96,6 +100,18 @@ const App: FC = () => {
         }
     }
 
+    async function copyPalettesHandler() {
+        await navigator.clipboard.writeText(
+            palettes
+                .map(p => 
+                    generateColors(p.normalColor, settings.range, settings.luminenceStep, LOWEST_LUM, HIGHEST_LUM)
+                    .map(c => convertToTypeString(c, settings.preferredColorType))
+                    .join("\n"))
+                .join("\n\n")
+        );
+        setCopiedToClipboard(true);
+    }
+
     function settingsButtonClickHandler() {
         setSettingsPopoverOpen(!settingsPopoverOpen);
     }
@@ -143,6 +159,14 @@ const App: FC = () => {
                             <FaCog />
                         </CircularIconButton>
                     </InfoPopover>
+                    <CircularIconButton
+                        lg
+                        onClick={copyPalettesHandler}
+                        titleDisplayDirection="left"
+                        title={copiedToClipboard ? "Copied!" : "Copy all palettes to clipboard"}
+                    >
+                        <FaCopy />
+                    </CircularIconButton>
                     <CircularIconButton 
                         lg 
                         onClick={randomisePalettesHandler}
