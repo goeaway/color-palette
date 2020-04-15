@@ -1,7 +1,7 @@
 export function getRandomNumberInRange(min: number, max: number) {
-    return Math.random() * (max - min) + min;
+    return Math.floor(Math.random() * (max - min) + min);
 }
 
 export function getRandomNumberBy(multiplier: number) {
-    return Math.random() * multiplier;
+    return Math.floor(Math.random() * multiplier);
 }

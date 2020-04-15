@@ -14,6 +14,7 @@ import { getSettings, storeSettings } from "../services/settings-service";
 import useResetFlagAfter from "../hooks/use-reset-flag-after";
 import { convertToTypeString, generateColors } from "../utils/colors";
 import { LOWEST_LUM, HIGHEST_LUM } from "../consts";
+import { getTagline } from "../utils/get-tag-line";
 
 const MAX_PALETTES = 10;
 const START_PALETTES = 5;
@@ -145,7 +146,7 @@ const App: FC = () => {
         <AppContainer>
             <NavBar>
                 <NavBarInner>
-                    <TagLine>Create a brand new color scheme for your next project. Mix and match colors you like with this drag and drop palette creator.</TagLine>
+                    <TagLine>{getTagline()}</TagLine>
                 </NavBarInner>
                 <NavBarInner>
                     <InfoPopover onClose={settingsPopoverClosedHandler} show={settingsPopoverOpen} content={(<SettingsPopover settings={settings} onChange={settingsPopoverOnChangeHandler} />)}>
