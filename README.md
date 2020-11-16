@@ -4,4 +4,4 @@
  * Lock in palettes to remember them for later.
  * Copy palettes to your clipboard in your preferred color format to use wherever you need them
 
-[Click here to get started](https://palettify-on.netlify.com)
+[Click here to get started](https://www.palettehonk.com/)
